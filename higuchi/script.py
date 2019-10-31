@@ -1,20 +1,3 @@
-from collections import Counter
-from catboost import CatBoost
-from catboost import Pool
-import xgboost as xgb
-import lightgbm as lgb
-from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import StratifiedKFold, KFold
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import os
-import re
-import sys
-from sklearn.ensemble import RandomForestRegressor
-
 
 class RegressionPredictor(object):
     '''
@@ -105,7 +88,7 @@ class RegressionPredictor(object):
         elif self.clf_type == 'lgb':
             clf_train = lgb.Dataset(tr_X, tr_y)
             clf_val = lgb.Dataset(val_X, val_y, reference=lgb.train)
-            self.model = lgb.train(self.params, clf_train, valid_sets=clf_val)
+            self.model = lgb.train(self.params, clf_train,valid_sets=[clf_train,clf_val],verbose_eval=500)
             self.oof[val_idx] = self.model.predict(val_X, num_iteration=self.model.best_iteration)
             self.preds += self.model.predict(self.test_X, num_iteration=self.model.best_iteration) / self.kf.n_splits
             self.FIs += self.model.feature_importance(importance_type='gain')
@@ -139,7 +122,10 @@ class RegressionPredictor(object):
             raise ValueError('clf_type is wrong.')
 
     def fit(self):
-        for train_idx, val_idx in self.kf.split(self.train_X):
+        for i,(train_idx, val_idx) in enumerate(self.kf.split(self.train_X,self.train_y)):
+            start_time = time()
+            
+            print(f'Training on fold {i+1}')
             X_train = self.train_X.iloc[train_idx, :]
             X_val = self.train_X.iloc[val_idx, :]
             y_train = self.train_y[train_idx]
@@ -147,6 +133,11 @@ class RegressionPredictor(object):
             if self.aggfunc_dict != None:
                 X_train, X_val = self.target_encoding(X_train, X_val, y_train)
             self._get_cv_model(X_train, X_val, y_train, y_val, val_idx)
+            
+        print('-' * 30)
+        print('Training has finished.')
+        print('Total training time is {}'.format(str(datetime.timedelta(seconds=time() - start_time))))
+        print('-' * 30)
         print('this self.model`s rmse:', self.rmse())
 
         return self.oof, self.preds, self.FIs
