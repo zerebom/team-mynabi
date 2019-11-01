@@ -40,12 +40,13 @@ from script import RegressionPredictor
 import japanize_matplotlib
 
 SEED=1234
-n_splits=3
+n_splits=5
 
 
 '''
 19172.01030796285 
  {'reg_lambda': 13.569568709038572, 'reg_alpha': 0.03834093298774701, 'colsample_bytree': 0.6, 'subsample': 0.5, 'max_depth': 8, 'min_child_weight': 31}
+ 17562.816975160968 with parameters: {'reg_lambda': 42.55553901354264, 'reg_alpha': 0.0034913931092345903, 'colsample_bytree': 0.8, 'subsample': 0.8, 'max_depth': 8, 'min_child_weight': 13}
 '''
 
 train=pd.read_csv('./input/prep_train1030.csv')
@@ -162,7 +163,7 @@ f = partial(objective,X_train,y_train,X_test)
 
 #ハイパラ学習
 study = optuna.create_study()
-study.optimize(f, n_trials=100)
+study.optimize(f, n_trials=300)
 
 #bestパラメータの保存
 with open(f'./best_params_by_oputuna{datetime.datetime.today()}.txt') as f:

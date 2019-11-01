@@ -95,11 +95,11 @@ class RegressionPredictor(object):
         '''nround,early_stopをparam_dictから得るためのメソッド'''
         nround = 1000
         early_stop_rounds = 10
-        if self.params['num_boost_round']:
+        if 'num_boost_round' in self.params:
             nround = self.params['num_boost_round']
             del self.params['num_boost_round']
 
-        if self.params['early_stopping_rounds']:
+        if 'early_stopping_rounds' in self.params:
             early_stop_rounds = self.params['early_stopping_rounds']
             del self.params['early_stopping_rounds']
         return nround, early_stop_rounds
@@ -249,6 +249,7 @@ class LogRegressionPredictor(RegressionPredictor):
                                    clf_train,
                                    num_boost_round=nround,
                                    early_stopping_rounds=early_stop_rounds,
+                                   verbose_eval=self.verbose_eval,
                                    evals=evals,
                                    evals_result=evals_result)
 

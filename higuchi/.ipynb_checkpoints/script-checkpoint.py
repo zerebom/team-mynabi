@@ -249,6 +249,7 @@ class LogRegressionPredictor(RegressionPredictor):
                                    clf_train,
                                    num_boost_round=nround,
                                    early_stopping_rounds=early_stop_rounds,
+                                   verbose_eval=self.verbose_eval,
                                    evals=evals,
                                    evals_result=evals_result)
 
