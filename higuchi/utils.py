@@ -6,7 +6,6 @@ def save_data(train,oof,preds,rmse=20000,name='lgb',submit_dir='./submit',save_d
     from pathlib import Path　がいる
     predict.csvの情報を記載したcsvも作成する
     '''
-    time
     submit_dir=Path(submit_dir)
     save_dir=Path(save_dir)
     submit_path=submit_dir/'sample_submit.csv'
