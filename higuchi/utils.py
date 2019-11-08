@@ -29,8 +29,8 @@ def save_data(train,oof,preds,rmse=20000,name='lgb',submit_dir='./submit',save_d
     train_log_df=train_log_df.append(s)
     train_log_df.to_csv(train_log_path,index=None)
     
-    display(submit.head())
-    display(train_oof.head())
+    #display(submit.head())
+    #display(train_oof.head())
     
 def making_train_id_df(train,path='./submit/train_id.csv'):
     '''使ったtrain_idを保持しておくDataFrameを作成する'''
@@ -38,3 +38,5 @@ def making_train_id_df(train,path='./submit/train_id.csv'):
     train_id_df['id']=train['id'].values
     train_id_df['traget']=train['賃料'].values
     train_id_df.to_csv(path,header=None,index=None)
+    
+

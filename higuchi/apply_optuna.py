@@ -42,42 +42,53 @@ import japanize_matplotlib
 SEED=1234
 n_splits=5
 
+import numpy as np
+import pandas as pd
+import scipy as sp
+from scipy import stats
+from scipy.stats import norm, skew
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set()
+import matplotlib
 
-'''
-19172.01030796285 
- {'reg_lambda': 13.569568709038572, 'reg_alpha': 0.03834093298774701, 'colsample_bytree': 0.6, 'subsample': 0.5, 'max_depth': 8, 'min_child_weight': 31}
- 17562.816975160968 with parameters: {'reg_lambda': 42.55553901354264, 'reg_alpha': 0.0034913931092345903, 'colsample_bytree': 0.8, 'subsample': 0.8, 'max_depth': 8, 'min_child_weight': 13}
-'''
+pd.set_option('max_columns', 1000)
+pd.set_option('max_rows', 1000)
 
-train=pd.read_csv('./input/prep_train1030.csv')
-test=pd.read_csv('./input/prep_train1030.csv')
-y_train = train['賃料']
+import warnings
+warnings.filterwarnings('ignore')
 
+import re
+import geocoder
+from geopy.distance import great_circle, vincenty
+from tqdm import tqdm
+from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error
+import os
+import gc
+import lightgbm as lgb
+from sklearn.model_selection import KFold, train_test_split
+from time import time
+import datetime
+from script import RegressionPredictor, LogRegressionPredictor, plot_scatter
+import japanize_matplotlib
+# print(os.listdir("././input"))
+# print(os.listdir("././submit"))
+from utils import save_data
+SEED = 1234
+n_splits = 10
+import glob
 
-# In[3]:
+X_train = pd.read_csv('./psuedo/X_train1107.csv')
+train_idx=X_train['id']
+X_test = pd.read_csv('./psuedo/X_test1107.csv')
+y_train = X_train['賃料']
+drop_col = ['id', '賃料']
+y_train = X_train['賃料']
 
-
-drop_col = ['id','賃料']
-## 必要な特徴量に絞る
-y_train = train['賃料']
 y_train_log = np.log1p(y_train)
-X_train = train.drop(drop_col,axis=1)
-X_test = test.drop(drop_col,axis=1)
-
-train_idx = len(X_train)
-data = pd.concat([X_train, X_test])
-many_catego_cols = ['city', 'city2', 'nearest_sta', 'second_sta', 'third_sta']
-tmp_data = data[many_catego_cols]
-data = pd.get_dummies(data.drop(columns=many_catego_cols), drop_first=True)
-data = pd.concat([data, tmp_data], axis=1)
-X_train = data[:train_idx]
-X_test = data[train_idx:]
-features = ['面積', '築年数', 'sta_min', 'center_dis', 'loc_lat', 'loc_lon', '総階数', '畳', '所在階', '追焚機能', '方角_南', 'BSアンテナ', 'L', '建物構造_RC（鉄筋コンクリート）', '戸建て',
-            '室内洗濯機置場', 'IHコンロ', '駐輪場_無', '駐車場_空有', 'ウォークインクローゼット', '部屋数']
-X_train = X_train[features]
-X_test = X_test[features]
-
-
+X_train = X_train.drop(drop_col, axis=1)
+X_test = X_test.drop('id', axis=1)
 # In[4]:
 
 #ここに学習したいハイパーパラメータを入れる
@@ -97,6 +108,7 @@ def get_default_parameter_suggestions(trial):
         'boosting_type': 'gbdt',
         'objective': 'regression',
         'metric': 'mae',
+        'learning_rate': 0.05,
         'random_state': 0,
         'verbose': -1,
         'random_state': 0,
@@ -132,7 +144,7 @@ def objective(X_train,y_train,X_test,trial):
 
     rmses = list()
 
-    oof = pd.DataFrame({'id':list(train.id.values),'y_train':list(y_train.values)})
+    oof = pd.DataFrame({'id': list(train_idx.values), 'y_train': list(y_train.values)})
 
     for fold, (trn_idx, val_idx) in enumerate(kf.split(X_train, y_train_log)):
         start_time = time()
@@ -143,7 +155,7 @@ def objective(X_train,y_train,X_test,trial):
 
         tr_data = lgb.Dataset(tr_x, label=tr_y)
         vl_data = lgb.Dataset(vl_x, label=vl_y)
-        clf = lgb.train(params, tr_data, 5000, valid_sets = [tr_data, vl_data], verbose_eval=5000)
+        clf = lgb.train(params, tr_data, 50000, valid_sets = [tr_data, vl_data], verbose_eval=5000)
         oof.loc[val_idx,'oof'] = np.expm1(clf.predict(vl_x, num_iteration=clf.best_iteration))
 
         ## アンサンブル
@@ -166,11 +178,11 @@ study = optuna.create_study()
 study.optimize(f, n_trials=300)
 
 #bestパラメータの保存
-with open(f'./best_params_by_oputuna{datetime.datetime.today()}.txt') as f:
+with open(f'./best_params_by_oputuna.txt') as f:
     f.write(str(study.best_params()))
 
 #学習の過程を保存
 df=study.trials_dataframe()
-df.to_csv(f'../optuna_study_log_{datetime.datetime.today()}.csv')
+df.to_csv(f'../optuna_study_log.csv')
 
 

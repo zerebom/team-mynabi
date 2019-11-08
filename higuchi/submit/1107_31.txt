@@ -1,0 +1,8 @@
+./seed_average31/submit_14129_area_31_seed_13.csv
+./seed_average31/submit_14343_area_31_seed_11.csv
+./seed_average31/submit_14575_log_31_seed_13.csv
+./seed_average31/submit_14601_log_31_seed_11.csv
+./seed_average31/submit_14630_area_31_seed_10.csv
+./seed_average31/submit_14677_log_31_seed_12.csv
+./seed_average31/submit_14714_area_31_seed_12.csv
+./seed_average31/submit_14965_log_31_seed_10.csv

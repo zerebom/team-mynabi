@@ -287,3 +287,16 @@ class LogRegressionPredictor(RegressionPredictor):
     
     def rmse(self):
         return int(np.sqrt(mean_squared_error(self.oof, self.revert_func(self.train_y))))
+
+def plot_scatter(oof,train_y):
+    print('RMSE : ', np.sqrt(mean_squared_error(oof,train_y)))
+    print('R^2 : ', r2_score(oof,train_y))
+    plt.figure()
+    plt.scatter(oof,train_y, alpha=0.7)
+    plt.title("$R^2 = {:<.5}$".format(r2_score(oof,train_y)))
+    x = np.linspace(0, 2500000, 100)
+    plt.plot(x, x, c="indianred")
+    plt.xlabel('predict', size=20)
+    plt.ylabel('correct', size=20)
+    
+
